@@ -5,7 +5,7 @@
 
 ## 表设计
 WOOP表
-id(primary key),name,wish,obstacle,action,result,date,rank,discription。
+id(primary key),name,wish,obstacle,action,result,date,rank,description。
 
 ## 文件分层
 main.py 绑定路由

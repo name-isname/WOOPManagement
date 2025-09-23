@@ -12,7 +12,7 @@ class WOOP(Base):
     obstacle: Mapped[str] = mapped_column(Text, nullable=False, comment="障碍")
     action: Mapped[str] = mapped_column(Text, nullable=False, comment="行动")
     result: Mapped[str] = mapped_column(Text, nullable=False, comment="结果")
-    date: Mapped[Date] = mapped_column(Date, nullable=False, comment="日期")
+    datetime: Mapped[Date] = mapped_column(Date, nullable=False, comment="日期")
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="排名")
     description: Mapped[ str | None] = mapped_column(Text, nullable=True, comment="备注")
     
