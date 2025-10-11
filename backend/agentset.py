@@ -14,7 +14,6 @@ from os import getcwd
 
 from openai import AsyncOpenAI
 
-
 from typing import AsyncIterator
 from openai.types.responses import ResponseTextDeltaEvent
 
