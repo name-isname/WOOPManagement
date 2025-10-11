@@ -10,11 +10,11 @@ class WOOP(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False, comment="名称")
     wish: Mapped[str] = mapped_column(Text, nullable=False, comment="愿望")
     obstacle: Mapped[str] = mapped_column(Text, nullable=False, comment="障碍")
-    action: Mapped[str] = mapped_column(Text, nullable=False, comment="行动")
-    result: Mapped[str] = mapped_column(Text, nullable=False, comment="结果")
-    datetime: Mapped[Date] = mapped_column(Date, nullable=False, comment="日期")
+    plan: Mapped[str] = mapped_column(Text, nullable=False, comment="行动")
+    outcome: Mapped[str] = mapped_column(Text, nullable=False, comment="结果")
+    datetime: Mapped[Date | None] = mapped_column(Date, nullable=True, comment="日期")
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="排名")
     description: Mapped[ str | None] = mapped_column(Text, nullable=True, comment="备注")
     
     def __repr__(self) -> str:
-        return f"<WOOP(id={self.id}, name='{self.name}', date='{self.date}')>"
+        return f"<WOOP(id={self.id}, name='{self.name}', date='{self.datetime}')>"

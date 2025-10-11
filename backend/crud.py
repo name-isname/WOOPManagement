@@ -107,8 +107,8 @@ class WOOPCrud:
                 WOOP.name.contains(keyword),
                 WOOP.wish.contains(keyword),
                 WOOP.obstacle.contains(keyword),
-                WOOP.action.contains(keyword),
-                WOOP.result.contains(keyword),
+                WOOP.plan.contains(keyword),
+                WOOP.outcome.contains(keyword),
                 WOOP.description.contains(keyword)
             )
         )

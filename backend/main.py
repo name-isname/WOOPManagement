@@ -8,6 +8,7 @@ from database import engine, get_db
 from schema import WOOPCreate, WOOPUpdate, WOOPResponse, WOOPList, MessageResponse
 from crud import woop_crud
 
+# from mcps import mcp_app
 # 创建数据库表
 models.Base.metadata.create_all(bind=engine)
 
@@ -15,7 +16,8 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="WOOP Management API",
     description="WOOP目标管理系统API",
-    version="1.0.0"
+    version="0.1.0",
+    # lifespan=mcp_app.lifespan
 )
 
 # 配置CORS
@@ -33,10 +35,10 @@ async def root() -> MessageResponse:
     return MessageResponse(message="WOOP Management API is running!")
 
 @app.post("/woops/", response_model=WOOPResponse, status_code=201)
-async def create_woop(woop: WOOPCreate, db: Session = Depends(get_db)) -> WOOPResponse:
+def create_woop(woop: WOOPCreate, db: Session = Depends(get_db)) -> WOOPResponse:
     """创建新的WOOP记录"""
     try:
-        return woop_crud.create(db=db, woop_data=woop)
+        return woop_crud.create(db=db, woop_data=woop) # type: ignore
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"创建失败: {str(e)}")
 
@@ -46,7 +48,7 @@ async def get_woop(woop_id: int, db: Session = Depends(get_db)) -> WOOPResponse:
     woop = woop_crud.get_by_id(db=db, woop_id=woop_id)
     if woop is None:
         raise HTTPException(status_code=404, detail="WOOP记录不存在")
-    return woop
+    return woop # type: ignore
 
 @app.get("/woops/", response_model=WOOPList)
 async def get_woops(
@@ -61,7 +63,7 @@ async def get_woops(
     total: int = woop_crud.get_count(db=db, name_filter=name_filter)
     
     return WOOPList(
-        items=woops, 
+        items=woops,  # type: ignore
         total=total,
         page=page,
         size=size
@@ -77,7 +79,7 @@ async def update_woop(
     updated_woop: Optional[models.WOOP] = woop_crud.update(db=db, woop_id=woop_id, woop_data=woop_update)
     if updated_woop is None:
         raise HTTPException(status_code=404, detail="WOOP记录不存在")
-    return updated_woop
+    return updated_woop # type: ignore
 
 @app.delete("/woops/{woop_id}", response_model=MessageResponse)
 async def delete_woop(woop_id: int, db: Session = Depends(get_db)) -> MessageResponse:
@@ -91,13 +93,13 @@ async def delete_woop(woop_id: int, db: Session = Depends(get_db)) -> MessageRes
 async def get_woops_by_rank(rank: int, db: Session = Depends(get_db)) -> list[WOOPResponse]:
     """根据排名获取WOOP记录"""
     woops: list[models.WOOP] = woop_crud.get_by_rank(db=db, rank=rank)
-    return woops
+    return woops # type: ignore
 
 @app.get("/woops/search/{keyword}", response_model=list[WOOPResponse])
 async def search_woops(keyword: str, db: Session = Depends(get_db)) -> list[WOOPResponse]:
     """全文搜索WOOP记录"""
     woops: list[models.WOOP] = woop_crud.search(db=db, keyword=keyword)
-    return woops
+    return woops # type: ignore
 
 @app.get("/woops/date-range/", response_model=list[WOOPResponse])
 async def get_woops_by_date_range(
@@ -107,12 +109,14 @@ async def get_woops_by_date_range(
 ) -> list[WOOPResponse]:
     """根据日期范围获取WOOP记录"""
     woops: list[models.WOOP] = woop_crud.get_by_date_range(db=db, start_date=start_date, end_date=end_date)
-    return woops
+    return woops # type: ignore
 
 @app.get("/health", response_model=MessageResponse)
 async def health_check() -> MessageResponse:
     """健康检查"""
     return MessageResponse(message="服务运行正常")
+
+# app.mount("/tool", mcp_app)
 
 if __name__ == "__main__":
     import uvicorn

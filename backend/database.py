@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from pathlib import Path
 from typing import Generator
+from sqlalchemy.orm import Session
 
 # SQLite数据库URL
 SQLALCHEMY_DATABASE_URL = "sqlite:///" + str(Path.cwd() / "woop_management.db")
@@ -20,7 +21,7 @@ class Base(DeclarativeBase):
     pass
 
 # 数据库依赖函数
-def get_db() -> Generator:
+def get_db() -> Generator[Session, None, None]:
     """获取数据库会话"""
     db = SessionLocal()
     try:

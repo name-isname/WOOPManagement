@@ -7,10 +7,8 @@ class WOOPBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="名称")
     wish: str = Field(..., min_length=1, description="愿望")
     obstacle: str = Field(..., min_length=1, description="障碍")
-    action: str = Field(..., min_length=1, description="行动")
-    result: str = Field(..., min_length=1, description="结果")
-    datetime: date = Field(..., description="日期")
-    rank: Optional[int] = Field(None, ge=1, description="排名")
+    plan: str = Field(..., min_length=1, description="行动")
+    outcome: str = Field(..., min_length=1, description="结果")
     description: Optional[str] = Field(None, description="备注")
 
     class Config:
@@ -25,8 +23,8 @@ class WOOPUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100, description="名称")
     wish: Optional[str] = Field(None, min_length=1, description="愿望")
     obstacle: Optional[str] = Field(None, min_length=1, description="障碍")
-    action: Optional[str] = Field(None, min_length=1, description="行动")
-    result: Optional[str] = Field(None, min_length=1, description="结果")
+    plan: Optional[str] = Field(None, min_length=1, description="行动")
+    outcome: Optional[str] = Field(None, min_length=1, description="结果")
     datetime: Optional[date] = Field(None, description="日期")
     rank: Optional[int] = Field(None, ge=1, description="排名")
     description: Optional[str] = Field(None, description="备注")
@@ -44,6 +42,8 @@ class WOOPdelete(BaseModel):
 class WOOPResponse(WOOPBase):
     """WOOP响应模型"""
     id: int = Field(..., description="ID")
+    datetime: date = Field(..., description="日期")
+    rank: Optional[int] = Field(None, ge=1, description="排名")
     
 
 class WOOPList(BaseModel):
