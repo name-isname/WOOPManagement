@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Backend (Uvicorn 8000)",
+			"type": "shell",
+			"command": "cd \"c:\\Users\\www\\Desktop\\woop\\WOOPManagement\\backend\"; $env:PYTHONIOENCODING='utf-8'; python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run Frontend (Vite 5173)",
+			"type": "shell",
+			"command": "cd \"c:\\Users\\www\\Desktop\\woop\\WOOPManagement\\my-front\"; $env:VITE_API_BASE='http://127.0.0.1:8000'; npm run dev -- --port 5173 --strictPort",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start All (Backend+Frontend)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"c:\\Users\\www\\Desktop\\woop\\WOOPManagement\\dev.ps1"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

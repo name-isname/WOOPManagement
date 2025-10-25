@@ -13,3 +13,9 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "uvicorn>=0.36.0",
 ]
+
+[project.scripts]
+# 开发时自动热重载
+dev = "uvicorn main:app --host 127.0.0.1 --port 8000 --reload"
+# 生产/稳定运行（无热重载）
+start = "uvicorn main:app --host 127.0.0.1 --port 8000"
