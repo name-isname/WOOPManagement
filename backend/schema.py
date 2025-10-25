@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 class WOOPBase(BaseModel):
@@ -42,7 +42,8 @@ class WOOPdelete(BaseModel):
 class WOOPResponse(WOOPBase):
     """WOOP响应模型"""
     id: int = Field(..., description="ID")
-    datetime: date = Field(..., description="日期")
+    # 后端创建时可能未显式赋值日期，允许为可选，避免序列化时报 500
+    datetime: Optional[date] = Field(None, description="日期")
     rank: Optional[int] = Field(None, ge=1, description="排名")
     
 
@@ -59,6 +60,25 @@ class WOOPList(BaseModel):
 class MessageResponse(BaseModel):
     """通用消息响应模型"""
     message: str = Field(..., description="响应消息")
+
+    class Config:
+        from_attributes = True
+
+
+# ====== Chat schemas ======
+class ChatItem(BaseModel):
+    id: int
+    project_name: Optional[str] = None
+    role: str
+    text: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ChatHistory(BaseModel):
+    items: list[ChatItem]
+    total: int
 
     class Config:
         from_attributes = True

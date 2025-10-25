@@ -32,7 +32,7 @@ def mcp_get_woops() -> list[WOOP]:
     with SessionLocal() as db:
         return woop_crud.get_all(db=db, skip=0, limit=100) # type: ignore
 
-# mcp_app = mcp.http_app(path="/mcp")
+# FastMCP 通过 stdio 方式运行（见 agentset.py），无需在 FastAPI 中挂载 HTTP 子应用
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

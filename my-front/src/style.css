@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+/* Global theme variables driven by --brand. Sidebar/Chat/Project surfaces derive from it. */
+:root{
+	--bg: #f8fafc;
+	--fg: #0f172a;
+	--brand: #3b82f6; /* default brand color; Sidebar palette will update this */
+	--sidebar-bg: color-mix(in oklab, var(--brand) 30%, #0f172a);
+	--surface: color-mix(in oklab, var(--brand) 4%, #ffffff);
+	--surface-border: color-mix(in oklab, var(--brand) 12%, #cbd5e1);
+	--surface-hover-border: color-mix(in oklab, var(--brand) 28%, #94a3b8);
+	--chat-bg: color-mix(in oklab, var(--brand) 6%, #f8fafc);
+}
+
+/* Dark mode overrides */
+.dark{
+	--bg: #0b1220;
+	--fg: #e5e7eb;
+	--sidebar-bg: color-mix(in oklab, var(--brand) 28%, #0b1324);
+	--surface: color-mix(in oklab, var(--brand) 10%, #0f172a);
+	--surface-border: color-mix(in oklab, var(--brand) 24%, #1f2937);
+	--surface-hover-border: color-mix(in oklab, var(--brand) 40%, #334155);
+	--chat-bg: color-mix(in oklab, var(--brand) 10%, #0b1220);
+}
+
+/* Gentle dark overrides for common Tailwind utility backgrounds used in components */
+.dark .bg-white{ background-color: #0f172a !important; color: var(--fg) }
+.dark .border{ border-color: var(--surface-border) !important }
+.dark .text-gray-600{ color: #cbd5e1 !important }
+.dark .text-slate-900{ color: var(--fg) !important }
