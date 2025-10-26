@@ -13,26 +13,39 @@
       <!-- 顶部 / 底部垂直拖拽手柄 -->
       <div class="chat-handle chat-handle-top" @mousedown="(e)=>startChatResize('top', e)" aria-label="从上侧拖拽调整聊天框高度"></div>
       <div class="chat-handle chat-handle-bottom" @mousedown="(e)=>startChatResize('bottom', e)" aria-label="从下侧拖拽调整聊天框高度"></div>
-      <div v-for="(m,i) in messages" :key="i" class="mb-2">
-        <div class="text-xs text-gray-500">{{ m.role }}</div>
-        <div class="bubble">{{ m.text }}</div>
+
+      <div v-for="(m,i) in messages" :key="i" class="msg" :class="m.role">
+        <div class="avatar" aria-hidden="true">{{ m.role === 'user' ? '🧑' : (m.role === 'system' ? '⚙️' : '🤖') }}</div>
+        <div class="bubble" :class="m.role">
+          <template v-for="(seg, si) in parseSegments(m.text)" :key="si">
+            <pre v-if="seg.type==='code'" class="code"><code>{{ seg.content }}</code></pre>
+            <p v-else class="text">{{ seg.content }}</p>
+          </template>
+          <button class="copy" title="复制" @click="copy(m.text)">复制</button>
+        </div>
       </div>
     </div>
 
-    <div class="flex gap-2">
-      <input v-model="input" class="flex-1 border px-2 py-1" @keydown.enter.prevent="send" />
-      <button class="send" @click="send">发送</button>
+    <div class="composer">
+      <textarea ref="ta" v-model="input" class="input" rows="1" placeholder="说点什么…(Enter 发送，Shift+Enter 换行)"
+        @keydown="onKeydown" @input="autoGrow"></textarea>
+      <div class="actions">
+        <button class="btn ghost" @click="clearChat" :disabled="!messages.length">清空</button>
+        <button class="btn primary" @click="send" :disabled="sending || !input.trim()">{{ sending ? '发送中…' : '发送' }}</button>
+      </div>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 const apiBase = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const props = defineProps({ project: Object })
 const emit = defineEmits(['close'])
 const input = ref('')
 const messages = ref([])
+const sending = ref(false)
+const ta = ref(null)
 
 // 面板宽度（持久化）
 const panelEl = ref(null)
@@ -154,10 +167,11 @@ async function send(){
   const prompt = input.value
   messages.value.push({ role:'user', text: prompt })
   input.value = ''
-
+  await nextTick(); autoGrow()
   // 占位消息
   const idx = messages.value.push({ role:'ai', text: '思考中…' }) - 1
   try{
+    sending.value = true
     const body = { prompt, project_name: props.project?.name || props.project?.title || null }
     const res = await fetch(`${apiBase}/ai/chat`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) })
     if (!res.ok){
@@ -168,19 +182,81 @@ async function send(){
     messages.value[idx].text = data.text || '[无回复]'
   }catch(err){
     messages.value[idx].text = `出错了：${err?.message || err}`
+  }finally{
+    sending.value = false
   }
 }
+
+// 将文本按 ``` 包裹的代码块与普通文本切分
+function parseSegments(t){
+  const out = []
+  if(!t) return out
+  const parts = String(t).split(/```/g)
+  for(let i=0;i<parts.length;i++){
+    const content = parts[i]
+    if(i % 2 === 1){
+      // 代码段，可能包含首行语言标识，这里仅保留原文
+      out.push({ type:'code', content })
+    }else if(content){
+      out.push({ type:'text', content })
+    }
+  }
+  return out
+}
+
+function copy(text){
+  try{ navigator.clipboard.writeText(text) }catch{}
+}
+
+function onKeydown(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault()
+    if(!sending.value) send()
+  }
+}
+
+function autoGrow(){
+  const el = ta.value
+  if(!el) return
+  el.style.height = 'auto'
+  const max = 160
+  el.style.height = Math.min(el.scrollHeight, max) + 'px'
+}
+
+function clearChat(){
+  messages.value = []
+}
+// 自动滚动到底部
+watch(messages, async ()=>{
+  await nextTick()
+  if(chatEl.value){ chatEl.value.scrollTop = chatEl.value.scrollHeight }
+},{ deep:true })
+
 </script>
 
 <style scoped>
   .ai-panel{ background: var(--chat-bg, #fff); color: var(--fg); position: relative; min-width: 280px; max-width: 720px; border-left: 1px solid var(--surface-border) }
   .resize-handle-left{ position:absolute; left:-3px; top:0; width:6px; height:100%; cursor: ew-resize; user-select:none }
   .chat-window{ background: color-mix(in oklab, var(--brand) 6%, var(--surface)); border-color: var(--surface-border); color: var(--fg) }
-  .bubble{ padding: 8px; background: color-mix(in oklab, var(--brand) 12%, var(--surface)); border-radius: 8px; white-space: pre-wrap; word-break: break-word; line-height: 1.5; color: var(--fg) }
-  .send{ background: var(--brand, #3b82f6); color:#fff; border:none; border-radius:6px; padding:6px 10px; cursor:pointer }
-  .send:hover{ filter: brightness(1.05) }
-  /* 输入框在暗夜模式下的适配 */
-  .ai-panel input{ background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 6px }
+  /* 对话列表布局：左右气泡 + 头像 */
+  .msg{ display:flex; gap:10px; align-items:flex-start; padding:8px 6px }
+  .msg.user{ flex-direction: row-reverse }
+  .avatar{ width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background: color-mix(in oklab, var(--surface) 70%, #0000001a); border:1px solid var(--surface-border) }
+  .bubble{ position:relative; max-width: calc(100% - 48px); padding:10px 12px; border-radius: 12px; white-space: normal; word-break: break-word; line-height: 1.6 }
+  .bubble.ai, .bubble.system{ background: color-mix(in oklab, var(--surface) 85%, #00000010); border:1px solid var(--surface-border); color: var(--fg) }
+  .bubble.user{ background: color-mix(in oklab, var(--brand) 86%, #ffffff); border:1px solid color-mix(in oklab, var(--brand) 60%, var(--surface-border)); color: #0b1220 }
+  .bubble .text{ margin: 0 0 8px 0; white-space: pre-wrap }
+  .bubble .code{ margin: 8px 0; padding:10px; border-radius:8px; background: #0b1220; color:#e6edf3; overflow:auto }
+  .bubble .copy{ position:absolute; top:6px; right:6px; opacity:.0; transform: translateY(-2px); transition: opacity .15s ease; background: transparent; border:1px solid var(--surface-border); border-radius:6px; padding:2px 6px; cursor:pointer; color: inherit }
+  .bubble:hover .copy{ opacity:.9 }
+
+  .composer{ display:flex; flex-direction: column; gap:8px }
+  .input{ width:100%; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 8px; padding:8px 10px; resize: none; line-height:1.5 }
+  .actions{ display:flex; gap:8px; justify-content:flex-end }
+  .btn{ border:1px solid var(--surface-border); border-radius:8px; padding:6px 12px; cursor:pointer }
+  .btn.ghost{ background: transparent; color: var(--fg) }
+  .btn.primary{ background: var(--brand, #3b82f6); color:#fff; border-color: transparent }
+  .btn:disabled{ opacity:.6; cursor: not-allowed }
   /* 允许用户通过顶部/底部手柄改变聊天窗高度（禁用原生 resize，避免样式被重置） */
   .chat-window{ resize: none; min-height: 160px; max-height: 70vh; position: relative }
   .chat-handle{ position:absolute; left:0; width:100%; height:8px; cursor: ns-resize; user-select:none }

@@ -47,16 +47,15 @@ const hover = ref(false)
   padding: 14px 14px 14px 12px;
   min-height: 92px;
   box-shadow: 0 1px 2px rgba(0,0,0,.03);
-  transition: box-shadow .18s ease, border-color .18s ease, padding .18s ease, background-color .18s ease, max-height .18s ease;
+  transition: box-shadow .18s ease, border-color .18s ease, background-color .18s ease, max-height .18s ease, transform .18s ease;
 }
-.card:hover{ box-shadow: 0 16px 40px rgba(0,0,0,.10); border-color: var(--surface-hover-border, #94a3b8); z-index:5; padding: 16px 16px 16px 12px }
+.card:hover{ box-shadow: 0 16px 40px rgba(0,0,0,.10); border-color: var(--surface-hover-border, #94a3b8); z-index:5; transform: scale(1.03) }
 .accent{ width: 4px; border-radius: 8px; background: var(--brand, #3b82f6) }
 .content{ flex:1; overflow:hidden }
 .title{ font-weight: 700; font-size: 16px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .desc{ margin-top: 6px; font-size: 13px; color: color-mix(in oklab, var(--fg) 65%, #94a3b8); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
-.card:hover .desc{ display:block; -webkit-line-clamp: initial; line-clamp: initial; max-height: none; overflow: visible; white-space: normal }
+/* 悬停不再展开描述，保持两行截断 */
 .details{ display:none; margin-top:10px }
-.card:hover .details{ display:block }
 .row{ display:flex; gap:8px; align-items:flex-start; font-size:12px; color: color-mix(in oklab, var(--fg) 70%, #94a3b8); line-height:1.5 }
 .row + .row{ margin-top:6px }
 .label{ min-width: 42px; color: color-mix(in oklab, var(--fg) 55%, #94a3b8) }
