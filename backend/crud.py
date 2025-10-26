@@ -34,6 +34,8 @@ class WOOPCrud:
         if name_filter:
             stmt = stmt.where(WOOP.name.contains(name_filter))
         
+        # 排序：已设置 rank 的优先，按 rank 升序；未设置 rank 的放最后，按 id 升序
+        stmt = stmt.order_by(WOOP.rank.is_(None), WOOP.rank.asc(), WOOP.id.asc())
         stmt = stmt.offset(skip).limit(limit)
         return list(db.scalars(stmt).all())
     

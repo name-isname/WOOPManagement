@@ -4,15 +4,7 @@
     <div class="brand" v-show="expanded">WOOP</div>
     <div class="rail-brand" v-show="!expanded">W</div>
 
-    <!-- Account login moved to top -->
-    <section class="block" v-show="expanded">
-      <h4 class="block-title">账号登录</h4>
-      <form class="login" @submit.prevent="emitLogin()">
-        <input v-model="login.username" placeholder="用户名" />
-        <input v-model="login.password" type="password" placeholder="密码" />
-        <button type="submit" class="btn">登录</button>
-      </form>
-    </section>
+    <!-- 账户登录模块已移除 -->
 
     <!-- Color palette -->
     <section class="block" v-show="expanded">
@@ -46,24 +38,19 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
-// 对外暴露：当前选中项目（可为空），以及选择主题色/登录事件
+// 对外暴露：当前选中项目（可为空），以及选择主题色事件
 const props = defineProps({ project: { type: Object, default: null } })
-const emit = defineEmits(['theme-change','login'])
+const emit = defineEmits(['theme-change'])
 
 const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4']
-const login = reactive({ username:'', password:'' })
 const dark = ref(false)
 const expanded = ref(false)
 
 function selectColor(c){
   document.documentElement.style.setProperty('--brand', c)
   emit('theme-change', c)
-}
-
-function emitLogin(){
-  emit('login', { ...login })
 }
 
 function applyDark(){
@@ -111,8 +98,6 @@ onMounted(()=>{
 .kv:last-child{ border-bottom:none }
 .k{ opacity:.7; min-width: 36px }
 .v{ opacity:.95; word-break: break-all }
-.login{ display:flex; flex-direction: column; gap:8px }
-.login input{ background: rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:6px; padding:6px 8px }
 .btn{ background: var(--brand, #3b82f6); color:#fff; border:none; border-radius:6px; padding:6px 10px; cursor:pointer }
 .btn:hover{ filter: brightness(1.05) }
 .toggle{ display:flex; align-items:center; gap:8px; font-size:13px }

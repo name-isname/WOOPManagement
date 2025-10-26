@@ -28,50 +28,106 @@
       </template>
       <!-- 卡片 -->
       <template v-else>
-  <ProjectCard v-for="item in items" :key="item.id" :item="item"
-         @link-ai="onLinkAI" @edit="onEdit" @delete="onDelete" @context="onCardContext" />
+        <div v-for="(item, i) in items" :key="item.id" class="dnd-item" draggable="true"
+             @dragstart="onDragStart(i)" @dragover.prevent @drop="onDrop(i)">
+          <ProjectCard :item="item" :index="i+1" @link-ai="onLinkAI" @edit="onEdit" @delete="onDelete" @context="onCardContext" />
+        </div>
       </template>
     </div>
 
-    <!-- 创建弹窗 -->
-    <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div class="modal-card rounded shadow p-4 w-96">
-        <h3 class="font-semibold mb-2">创建新项目</h3>
-        <div class="space-y-2 text-sm">
-          <input v-model="form.name" placeholder="名称 (name)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="form.wish" placeholder="愿望 (wish)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="form.obstacle" placeholder="障碍 (obstacle)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="form.plan" placeholder="计划 (plan)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="form.outcome" placeholder="结果 (outcome)" class="w-full border px-2 py-1 modal-input" />
-          <textarea v-model="form.description" placeholder="描述 (description)" class="w-full border px-2 py-1 modal-input" rows="3"></textarea>
+    <!-- 创建弹窗：与编辑弹窗同步风格 -->
+    <div v-if="showModal" class="fixed inset-0 z-50">
+      <div class="backdrop" @click="closeCreate"></div>
+      <div class="edit-panel" role="dialog" aria-modal="true">
+        <div class="edit-header">
+          <div>
+            <div class="edit-title">创建新项目</div>
+            <div class="edit-sub">填写 WOOP 的关键信息</div>
+          </div>
+          <button class="icon-btn" title="关闭" @click="closeCreate">×</button>
         </div>
 
-        <div class="mt-3 flex justify-end gap-2">
-          <button class="px-3 py-1 rounded border" @click="showModal=false">取消</button>
-          <button class="px-3 py-1 rounded bg-green-600 text-white" @click="createProject" :disabled="creating">{{ creating ? '创建中...' : '创建' }}</button>
+        <div class="edit-body">
+          <label class="field">
+            <span class="label">名称</span>
+            <input v-model="form.name" class="input" placeholder="示例：学习" />
+          </label>
+          <label class="field">
+            <span class="label">愿望</span>
+            <input v-model="form.wish" class="input" placeholder="我想要…" />
+          </label>
+          <label class="field">
+            <span class="label">障碍</span>
+            <input v-model="form.obstacle" class="input" placeholder="我会遇到…" />
+          </label>
+          <label class="field">
+            <span class="label">计划</span>
+            <input v-model="form.plan" class="input" placeholder="如果…那么我就…" />
+          </label>
+          <label class="field">
+            <span class="label">结果</span>
+            <input v-model="form.outcome" class="input" placeholder="我将达成…" />
+          </label>
+          <label class="field field-col">
+            <span class="label">描述</span>
+            <textarea v-model="form.description" class="input" rows="4" placeholder="补充说明（可选）"></textarea>
+          </label>
         </div>
-        <div v-if="formError" class="text-red-600 text-sm mt-2">{{ formError }}</div>
+
+        <div class="edit-footer">
+          <div class="grow"></div>
+          <button class="btn ghost" @click="closeCreate" :disabled="creating">取消</button>
+          <button class="btn primary" @click="createProject" :disabled="creating">{{ creating ? '创建中…' : '创建' }}</button>
+        </div>
+        <div v-if="formError" class="msg-err">{{ formError }}</div>
       </div>
     </div>
 
-    <!-- 编辑弹窗 -->
-    <div v-if="editModal" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div class="modal-card rounded shadow p-4 w-96">
-        <h3 class="font-semibold mb-2">编辑项目</h3>
-        <div class="space-y-2 text-sm">
-          <input v-model="editForm.name" placeholder="名称 (name)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="editForm.wish" placeholder="愿望 (wish)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="editForm.obstacle" placeholder="障碍 (obstacle)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="editForm.plan" placeholder="计划 (plan)" class="w-full border px-2 py-1 modal-input" />
-          <input v-model="editForm.outcome" placeholder="结果 (outcome)" class="w-full border px-2 py-1 modal-input" />
-          <textarea v-model="editForm.description" placeholder="描述 (description)" class="w-full border px-2 py-1 modal-input" rows="3"></textarea>
+    <!-- 编辑弹窗：参考后图的现代卡片风格 -->
+    <div v-if="editModal" class="fixed inset-0 z-50">
+      <div class="backdrop" @click="closeEdit"></div>
+      <div class="edit-panel" role="dialog" aria-modal="true">
+        <div class="edit-header">
+          <div>
+            <div class="edit-title">编辑项目</div>
+            <div class="edit-sub">请完善 WOOP 的关键信息</div>
+          </div>
+          <button class="icon-btn" title="关闭" @click="closeEdit">×</button>
         </div>
 
-        <div class="mt-3 flex justify-end gap-2">
-          <button class="px-3 py-1 rounded border" @click="editModal=false">取消</button>
-          <button class="px-3 py-1 rounded bg-blue-600 text-white" @click="updateProject" :disabled="editing">{{ editing ? '保存中...' : '保存' }}</button>
+        <div class="edit-body">
+          <label class="field">
+            <span class="label">名称</span>
+            <input v-model="editForm.name" class="input" placeholder="示例：学习" />
+          </label>
+          <label class="field">
+            <span class="label">愿望</span>
+            <input v-model="editForm.wish" class="input" placeholder="我想要…" />
+          </label>
+          <label class="field">
+            <span class="label">障碍</span>
+            <input v-model="editForm.obstacle" class="input" placeholder="我会遇到…" />
+          </label>
+          <label class="field">
+            <span class="label">计划</span>
+            <input v-model="editForm.plan" class="input" placeholder="如果…那么我就…" />
+          </label>
+          <label class="field">
+            <span class="label">结果</span>
+            <input v-model="editForm.outcome" class="input" placeholder="我将达成…" />
+          </label>
+          <label class="field field-col">
+            <span class="label">描述</span>
+            <textarea v-model="editForm.description" class="input" rows="4" placeholder="补充说明（可选）"></textarea>
+          </label>
         </div>
-        <div v-if="editError" class="text-red-600 text-sm mt-2">{{ editError }}</div>
+
+        <div class="edit-footer">
+          <div class="grow"></div>
+          <button class="btn ghost" @click="closeEdit">取消</button>
+          <button class="btn primary" @click="updateProject" :disabled="editing">{{ editing ? '保存中…' : '保存' }}</button>
+        </div>
+        <div v-if="editError" class="msg-err">{{ editError }}</div>
       </div>
     </div>
 
@@ -102,7 +158,7 @@ import { ref, onMounted, computed } from 'vue'
 const props = defineProps({ backendOnline: { type: Boolean, default: true } })
 import ProjectCard from './ProjectCard.vue'
 
-const emit = defineEmits(['link-ai'])
+const emit = defineEmits(['link-ai','backend-online'])
 
 // 优先使用环境变量，默认使用 127.0.0.1 以规避某些代理对 localhost 的拦截
 const apiBase = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
@@ -133,9 +189,12 @@ const editForm = ref({ id:null, name:'', wish:'', obstacle:'', plan:'', outcome:
 function fetchList(){
   loading.value = true
   fetch(`${apiBase}/woops/?page=1&size=50`)
-    .then(r=>r.json())
-    .then(d=>{ items.value = d.items || []; total.value = d.total || items.value.length })
-    .catch(e=>{ console.error(e) })
+    .then(r=>{
+      if(!r.ok) throw new Error('Status ' + r.status)
+      return r.json()
+    })
+    .then(d=>{ items.value = d.items || []; total.value = d.total || items.value.length; emit('backend-online', true) })
+    .catch(e=>{ console.error(e); emit('backend-online', false) })
     .finally(()=>{ loading.value = false })
 }
 
@@ -257,6 +316,38 @@ async function updateProject(){
     editing.value = false
   }
 }
+
+function closeCreate(){ showModal.value = false }
+function closeEdit(){ editModal.value = false }
+
+// ===== 拖拽排序 =====
+const dragIndex = ref(-1)
+function onDragStart(i){ dragIndex.value = i }
+function onDrop(i){
+  if (dragIndex.value < 0 || dragIndex.value === i) return
+  const arr = items.value.slice()
+  const [moved] = arr.splice(dragIndex.value, 1)
+  arr.splice(i, 0, moved)
+  items.value = arr
+  dragIndex.value = -1
+  persistRanks()
+}
+
+async function persistRanks(){
+  // 仅对排序发生变化的项提交 rank，rank 从 1 开始
+  const updates = []
+  for (let i=0;i<items.value.length;i++){
+    const it = items.value[i]
+    const desired = i + 1
+    if (it.rank !== desired){
+      updates.push(fetch(`${apiBase}/woops/${it.id}`, { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ rank: desired }) }))
+      it.rank = desired
+    }
+  }
+  if (updates.length){
+    try{ await Promise.allSettled(updates) }catch{}
+  }
+}
 </script>
 
 <style scoped>
@@ -275,4 +366,29 @@ async function updateProject(){
 .empty-desc{ color:#475569; font-size:13px; margin-top:6px; margin-bottom:12px }
 .btn{ background: var(--brand, #3b82f6); color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer }
 .btn:hover{ filter: brightness(1.05) }
+/* 拖拽放置时的轻微提示边框 */
+.dnd-item{ border-radius: 12px }
+.dnd-item:where([draggable="true"]){ cursor: grab }
+.dnd-item:where([draggable="true"]:active){ cursor: grabbing }
+
+/* ===== 编辑弹窗新样式 ===== */
+.backdrop{ position: fixed; inset:0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px) }
+.edit-panel{ position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 560px; max-width: 92vw; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.2); display:flex; flex-direction: column; max-height: 82vh; min-height: 60vh }
+.edit-header{ display:flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--surface-border) }
+.edit-title{ font-size: 16px; font-weight: 700 }
+.edit-sub{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8) }
+.icon-btn{ width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--surface-border); border-radius: 8px; background: transparent; cursor: pointer }
+.icon-btn:hover{ background: color-mix(in oklab, var(--surface) 70%, #00000010) }
+.edit-body{ padding: 14px 16px 28px; display:grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1 1 auto; overflow: auto }
+.field{ display:flex; flex-direction: column; gap: 6px }
+.field-col{ grid-column: 1 / -1; margin-bottom: 12px }
+.label{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8) }
+.input{ background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 8px; padding: 8px 10px }
+.input[type="textarea"], textarea.input{ min-height: 96px }
+.input:focus{ outline: none; border-color: color-mix(in oklab, var(--brand) 60%, var(--surface-border)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 18%, transparent) }
+.edit-footer{ display:flex; align-items:center; gap:8px; padding: 12px 16px; border-top: 1px solid var(--surface-border); background: var(--surface); margin-top: auto }
+.btn.ghost{ background: transparent; color: var(--fg); border:1px solid var(--surface-border); border-radius:8px; padding: 6px 12px; cursor: pointer }
+.btn.primary{ background: var(--brand, #3b82f6); color:#fff; border:none; border-radius:8px; padding: 6px 12px; cursor: pointer }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
+.msg-err{ color:#ef4444; font-size: 12px; padding: 6px 16px }
 </style>

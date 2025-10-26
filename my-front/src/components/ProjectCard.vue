@@ -2,7 +2,8 @@
   <div class="card" @contextmenu.prevent="$emit('context', { originalEvent: $event, item })" @mouseenter="hover=true" @mouseleave="hover=false">
     <div class="accent" />
     <div class="content">
-      <div class="title">{{ item.name || item.title || '未命名' }}</div>
+  <div class="title">{{ item.name || item.title || '未命名' }}</div>
+  <div class="meta"><span class="badge">{{ index }}</span><span class="id">ID: {{ item.id }}</span></div>
       <div class="desc">{{ item.description || item.outcome || '' }}</div>
 
       <!-- 详细信息：默认收起，悬停时展开，推动网格重新排布 -->
@@ -30,7 +31,7 @@
 
 <script setup>
 import { ref } from 'vue'
-const props = defineProps({ item: Object })
+const props = defineProps({ item: Object, index: { type: Number, default: 0 } })
 const emit = defineEmits(['link-ai','edit','delete','context'])
 const hover = ref(false)
 
@@ -53,6 +54,9 @@ const hover = ref(false)
 .accent{ width: 4px; border-radius: 8px; background: var(--brand, #3b82f6) }
 .content{ flex:1; overflow:hidden }
 .title{ font-weight: 700; font-size: 16px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.meta{ margin-top:4px; display:flex; gap:8px; align-items:center; font-size:12px; color: color-mix(in oklab, var(--fg) 65%, #94a3b8) }
+.badge{ display:inline-block; padding: 2px 6px; border-radius: 999px; background: color-mix(in oklab, var(--brand) 85%, #ffffff); color:#0b1220; border:1px solid color-mix(in oklab, var(--brand) 60%, var(--surface-border)) }
+.meta .id{ color: color-mix(in oklab, var(--fg) 55%, #94a3b8) }
 .desc{ margin-top: 6px; font-size: 13px; color: color-mix(in oklab, var(--fg) 65%, #94a3b8); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
 /* 悬停不再展开描述，保持两行截断 */
 .details{ display:none; margin-top:10px }

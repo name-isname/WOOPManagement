@@ -149,7 +149,7 @@ async def ai_chat(req: ChatRequest, db: Session = Depends(get_db)) -> ChatRespon
             raise RuntimeError("缺少 OpenRouter API Key，请在 backend/setting.toml 配置 api_key")
 
         client = AsyncOpenAI(base_url=base_url, api_key=api_key)
-        # 将项目名拼入上下文，便于更聚焦的回复
+        # 将项目名仅拼入模型上下文；保存到历史的 user 文本仍使用原始输入，避免在界面中出现“项目: xxx”前缀
         prompt = req.prompt if not req.project_name else f"项目: {req.project_name}\n{req.prompt}"
 
         completion = await client.chat.completions.create(
@@ -189,8 +189,8 @@ async def ai_chat(req: ChatRequest, db: Session = Depends(get_db)) -> ChatRespon
         # 持久化：保存 user 与 ai 的消息
         try:
             from models import ChatMessage
-            # user message
-            db.add(ChatMessage(project_name=req.project_name, role="user", text=prompt))
+            # user message（保存用户原始输入，不含项目名前缀）
+            db.add(ChatMessage(project_name=req.project_name, role="user", text=req.prompt))
             # ai message
             db.add(ChatMessage(project_name=req.project_name, role="ai", text=text))
             db.commit()
