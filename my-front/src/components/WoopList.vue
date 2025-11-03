@@ -65,7 +65,7 @@ onMounted(fetchList)
       <li v-for="it in items" :key="it.id" class="border p-3 rounded">
         <div class="font-semibold">{{ it.title }}</div>
         <div class="text-sm text-gray-600">{{ it.description }}</div>
-        <div class="text-xs text-gray-400">ID: {{ it.id }} • Rank: {{ it.rank }}</div>
+  <!-- id and rank removed -->
       </li>
     </ul>
 

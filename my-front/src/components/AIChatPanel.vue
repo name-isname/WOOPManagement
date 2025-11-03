@@ -225,23 +225,20 @@ async function scrollToBottom(){
 </script>
 
 <style scoped>
-  .ai-panel{ background: var(--chat-bg, #fff); color: var(--fg); position: relative; min-width: 280px; max-width: 720px; border-left: 1px solid var(--surface-border); display:flex; flex-direction: column; height: 100vh; overflow: hidden; padding-bottom: 0; box-sizing: border-box }
+  .ai-panel{ background: var(--chat-bg, #fff); color: var(--fg); position: relative; min-width: 280px; max-width: 720px; border-left: 1px solid var(--surface-border); display:flex; flex-direction: column; height: 100vh; overflow: hidden; padding-bottom: 0; box-sizing: border-box; /* avatar edge offset (negative moves toward edge) */ --avatar-edge-offset: -8px }
   .resize-handle-left{ position:absolute; left:-3px; top:0; width:6px; height:100%; cursor: ew-resize; user-select:none }
-  /* 聊天区：默认隐藏滚动条，悬停时显示；保持内容可滚动 */
+  /* 聊天区：隐藏滚动条但保留滚动功能（跨浏览器） */
   .chat-window{ background: transparent; border: none; color: var(--fg); flex: 1 1 auto; min-height: 0; overflow: auto; padding: 8px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-gutter: stable }
-  /* 默认隐藏（Firefox/旧版IE Edge） */
+  /* Firefox / IE */
   .chat-window{ -ms-overflow-style: none; scrollbar-width: none }
-  /* 默认隐藏（Chromium/WebKit） */
+  /* Chromium/WebKit */
   .chat-window::-webkit-scrollbar{ width: 0; height: 0 }
-  /* 悬停时显示 */
-  .chat-window:hover{ scrollbar-width: thin }
-  .chat-window:hover::-webkit-scrollbar{ width: 8px; height: 8px }
-  .chat-window:hover::-webkit-scrollbar-track{ background: transparent }
-  .chat-window:hover::-webkit-scrollbar-thumb{ background: color-mix(in oklab, var(--surface-border) 80%, #0000); border-radius: 8px }
-  .chat-window:hover::-webkit-scrollbar-thumb:hover{ background: color-mix(in oklab, var(--surface-border) 100%, #0000) }
   .msg{ display:flex; gap:10px; align-items:flex-start; padding:8px 6px }
   .msg.user{ flex-direction: row-reverse }
   .avatar{ width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background: color-mix(in oklab, var(--surface) 70%, #0000001a); border:1px solid var(--surface-border) }
+  /* 让头像更靠近面板边缘（左侧消息靠左，用户消息靠右）。使用变量便于调整。 */
+  .avatar{ margin-left: var(--avatar-edge-offset) }
+  .msg.user .avatar{ margin-left: 0; margin-right: var(--avatar-edge-offset) }
   .bubble{ position:relative; max-width: calc(100% - 48px); padding:10px 16px 10px 12px; border-radius: 12px; white-space: normal; word-break: break-word; line-height: 1.6 }
   .bubble.ai, .bubble.system{ background: color-mix(in oklab, var(--surface) 85%, #00000010); border:1px solid var(--surface-border); color: var(--fg) }
   .bubble.user{ background: color-mix(in oklab, var(--brand) 86%, #ffffff); border:1px solid color-mix(in oklab, var(--brand) 60%, var(--surface-border)); color: #0b1220 }
@@ -250,13 +247,9 @@ async function scrollToBottom(){
   .bubble ul{ margin: 6px 0 6px 1.2em; padding: 0; list-style: disc }
   .bubble .gap{ height: 6px }
   .bubble .code{ margin: 8px 0; padding:10px; border-radius:8px; background: #0b1220; color:#e6edf3; overflow:auto }
-  /* 代码块：默认隐藏，悬停显示（与聊天区一致） */
-  .bubble .code{ -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch }
+  /* 代码块：隐藏滚动条但允许横向/纵向滚动（保留用户滚动体验） */
+  .bubble .code{ -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; overflow: auto }
   .bubble .code::-webkit-scrollbar{ width: 0; height: 0 }
-  .bubble .code:hover{ scrollbar-width: thin }
-  .bubble .code:hover::-webkit-scrollbar{ width: 8px; height: 8px }
-  .bubble .code:hover::-webkit-scrollbar-thumb{ background: #3b82f655; border-radius: 8px }
-  .bubble .code:hover::-webkit-scrollbar-thumb:hover{ background: #3b82f6aa }
   .bubble .copy{ position:absolute; top:-12px; right:8px; opacity:.0; transform: translateY(-2px); transition: opacity .15s ease; background: var(--surface); border:1px solid var(--surface-border); border-radius:8px; padding:2px 6px; cursor:pointer; color: inherit; z-index:2; box-shadow: 0 2px 6px rgba(0,0,0,.08) }
   .bubble:hover .copy{ opacity:.9 }
   .hint{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8); margin-right: auto; align-self: center }
@@ -264,6 +257,9 @@ async function scrollToBottom(){
   /* 输入区固定在底部 */
   .composer{ display:flex; flex-direction: column; gap:8px; margin-top: auto }
   .input{ width:100%; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 8px; padding:8px 10px; resize: none; line-height:1.5 }
+  /* 隐藏输入框滚动条但保留滚动（当达到最大高度时用户仍可滚动） */
+  .input{ overflow: auto; -ms-overflow-style: none; scrollbar-width: none }
+  .input::-webkit-scrollbar{ width: 0; height: 0 }
   .actions{ display:flex; gap:8px; justify-content:flex-end }
   .btn{ border:1px solid var(--surface-border); border-radius:8px; padding:6px 12px; cursor:pointer }
   .btn.ghost{ background: transparent; color: var(--fg) }

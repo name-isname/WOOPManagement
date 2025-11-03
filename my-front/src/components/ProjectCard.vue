@@ -3,7 +3,7 @@
     <div class="accent" />
     <div class="content">
   <div class="title">{{ item.name || item.title || '未命名' }}</div>
-  <div class="meta"><span class="badge">{{ index }}</span><span class="id">ID: {{ item.id }}</span></div>
+  <div class="meta"></div>
       <div class="desc">{{ item.description || item.outcome || '' }}</div>
 
       <!-- 详细信息：默认收起，悬停时展开，推动网格重新排布 -->
@@ -13,8 +13,7 @@
         <div class="row"><span class="label">计划</span><span class="val">{{ item.plan || '-' }}</span></div>
         <div class="row"><span class="label">结果</span><span class="val">{{ item.outcome || '-' }}</span></div>
         <div class="row"><span class="label">日期</span><span class="val">{{ item.datetime || '-' }}</span></div>
-        <div class="row"><span class="label">排名</span><span class="val">{{ item.rank ?? '-' }}</span></div>
-        <div class="row muted"><span class="label">ID</span><span class="val">{{ item.id }}</span></div>
+  <!-- ID removed from details -->
       </div>
     </div>
 
@@ -53,13 +52,13 @@ const hover = ref(false)
 .card:hover{ box-shadow: 0 16px 40px rgba(0,0,0,.10); border-color: var(--surface-hover-border, #94a3b8); z-index:5; transform: scale(1.03) }
 .accent{ width: 4px; border-radius: 8px; background: var(--brand, #3b82f6) }
 .content{ flex:1; overflow:hidden }
-.title{ font-weight: 700; font-size: 16px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.title{ font-weight: 700; font-size: 16px; color: var(--fg); white-space: normal; overflow: visible }
 .meta{ margin-top:4px; display:flex; gap:8px; align-items:center; font-size:12px; color: color-mix(in oklab, var(--fg) 65%, #94a3b8) }
-.badge{ display:inline-block; padding: 2px 6px; border-radius: 999px; background: color-mix(in oklab, var(--brand) 85%, #ffffff); color:#0b1220; border:1px solid color-mix(in oklab, var(--brand) 60%, var(--surface-border)) }
-.meta .id{ color: color-mix(in oklab, var(--fg) 55%, #94a3b8) }
-.desc{ margin-top: 6px; font-size: 13px; color: color-mix(in oklab, var(--fg) 65%, #94a3b8); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
-/* 悬停不再展开描述，保持两行截断 */
-.details{ display:none; margin-top:10px }
+/* badge removed (index not displayed) */
+.meta .id{ display: none }
+.desc{ margin-top: 6px; font-size: 13px; color: color-mix(in oklab, var(--fg) 65%, #94a3b8); white-space: normal; overflow: visible }
+/* always show details (no hover collapse) */
+.details{ display:block; margin-top:10px }
 .row{ display:flex; gap:8px; align-items:flex-start; font-size:12px; color: color-mix(in oklab, var(--fg) 70%, #94a3b8); line-height:1.5 }
 .row + .row{ margin-top:6px }
 .label{ min-width: 42px; color: color-mix(in oklab, var(--fg) 55%, #94a3b8) }

@@ -132,14 +132,23 @@
     </div>
 
     <!-- 删除确认弹窗 -->
-    <div v-if="confirmDeleteModal" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div class="modal-card rounded shadow p-4 w-96">
-        <h3 class="font-semibold mb-2">确认删除</h3>
-        <p class="text-sm text-gray-600">确定要删除“{{ toDeleteItem?.name || '该项目' }}”吗？此操作不可撤回。</p>
-        <div v-if="deleteError" class="text-red-600 text-sm mt-2">{{ deleteError }}</div>
-        <div class="mt-3 flex justify-end gap-2">
-          <button class="px-3 py-1 rounded border" @click="confirmDeleteModal=false" :disabled="deleteLoading">取消</button>
-          <button class="px-3 py-1 rounded bg-red-600 text-white" @click="doDelete" :disabled="deleteLoading">{{ deleteLoading ? '删除中...' : '删除' }}</button>
+    <div v-if="confirmDeleteModal" class="fixed inset-0 flex items-center justify-center z-50">
+      <div class="backdrop" @click="confirmDeleteModal=false"></div>
+      <div class="modal-card-card w-96" role="dialog" aria-modal="true" aria-labelledby="del-title">
+        <div class="modal-head">
+          <div class="icon-wrap" aria-hidden="true">🗑️</div>
+          <div>
+            <h3 id="del-title" class="modal-title">确认删除</h3>
+            <div class="modal-sub">此操作将永久删除该项目，无法恢复。</div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <p class="text">你确定要删除 <strong>“{{ toDeleteItem?.name || '该项目' }}”</strong> 吗？</p>
+          <div v-if="deleteError" class="text-red-600 text-sm mt-2">{{ deleteError }}</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" @click="confirmDeleteModal=false" :disabled="deleteLoading">取消</button>
+          <button class="btn danger" @click="doDelete" :disabled="deleteLoading">{{ deleteLoading ? '删除中...' : '确认删除' }}</button>
         </div>
       </div>
     </div>
@@ -354,6 +363,20 @@ async function persistRanks(){
 .context-menu{ min-width:140px }
 /* 主题化：模态卡片与输入在暗色/亮色下适配 */
 .modal-card{ background: var(--surface); border: 1px solid var(--surface-border) }
+.modal-card-card{ background: var(--surface); border: 1px solid var(--surface-border); border-radius: 12px; box-shadow: 0 18px 50px rgba(11,18,32,0.28); padding: 16px; position: relative; overflow: hidden; transform: translateY(0); animation: pop .12s ease }
+.backdrop{ position: fixed; inset:0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px) }
+@keyframes pop{ from{ transform: translateY(-6px) scale(.995); opacity:0 } to{ transform: translateY(0) scale(1); opacity:1 } }
+.modal-head{ display:flex; gap:12px; align-items:center; margin-bottom:8px }
+.icon-wrap{ width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:9999px; background: color-mix(in oklab, var(--brand) 18%, #fee2e2); color: color-mix(in oklab, var(--brand) 60%, #ef4444); font-size:20px; border:1px solid color-mix(in oklab, var(--brand) 8%, #00000008) }
+.modal-title{ font-size:16px; font-weight:700 }
+.modal-sub{ font-size:12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8) }
+.modal-body{ padding:6px 0 10px }
+.modal-body .text{ color: var(--fg); font-size:14px }
+.modal-actions{ display:flex; justify-content:flex-end; gap:10px; padding-top:8px; border-top: 1px dashed color-mix(in oklab, var(--surface-border) 60%, #00000008); margin-top:8px }
+.btn.ghost{ background: transparent; color: var(--fg); border:1px solid var(--surface-border); border-radius:8px; padding:8px 12px }
+.btn.danger, .btn.danger:disabled{ background: linear-gradient(180deg,#ef4444,#dc2626); color:#fff; border:none; border-radius:8px; padding:8px 12px }
+.btn.danger:hover{ filter: brightness(.95) }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
 .modal-input{ background: transparent; color: var(--fg); border-color: var(--surface-border) }
 .context-menu{ background: var(--surface); border: 1px solid var(--surface-border) }
 /* 使用响应式 Grid，由最高卡片决定该行高度，其下各行整体下移 */
@@ -371,20 +394,20 @@ async function persistRanks(){
 .dnd-item:where([draggable="true"]){ cursor: grab }
 .dnd-item:where([draggable="true"]:active){ cursor: grabbing }
 
-/* ===== 编辑弹窗新样式 ===== */
+.modal-card{ background: var(--surface); border: 1px solid var(--surface-border) }
 .backdrop{ position: fixed; inset:0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px) }
-.edit-panel{ position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 560px; max-width: 92vw; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.2); display:flex; flex-direction: column; max-height: 82vh; min-height: 60vh }
+.edit-panel{ position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 560px; max-width: 92vw; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.2); display:flex; flex-direction: column; max-height: 90vh; min-height: 40vh; overflow: hidden }
 .edit-header{ display:flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--surface-border) }
 .edit-title{ font-size: 16px; font-weight: 700 }
 .edit-sub{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8) }
 .icon-btn{ width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--surface-border); border-radius: 8px; background: transparent; cursor: pointer }
 .icon-btn:hover{ background: color-mix(in oklab, var(--surface) 70%, #00000010) }
-.edit-body{ padding: 14px 16px 28px; display:grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1 1 auto; overflow: auto }
+.edit-body{ padding: 14px 16px 12px; display: grid; grid-template-columns: 1fr; gap: 12px; flex: 1 1 auto; overflow: auto }
 .field{ display:flex; flex-direction: column; gap: 6px }
 .field-col{ grid-column: 1 / -1; margin-bottom: 12px }
 .label{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8) }
-.input{ background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 8px; padding: 8px 10px }
-.input[type="textarea"], textarea.input{ min-height: 96px }
+.input{ background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box }
+.input[type="textarea"], textarea.input{ min-height: 120px }
 .input:focus{ outline: none; border-color: color-mix(in oklab, var(--brand) 60%, var(--surface-border)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 18%, transparent) }
 .edit-footer{ display:flex; align-items:center; gap:8px; padding: 12px 16px; border-top: 1px solid var(--surface-border); background: var(--surface); margin-top: auto }
 .btn.ghost{ background: transparent; color: var(--fg); border:1px solid var(--surface-border); border-radius:8px; padding: 6px 12px; cursor: pointer }
