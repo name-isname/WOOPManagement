@@ -11,10 +11,15 @@ const linkedProject = ref(null)
 const backendOnline = ref(false)
 
 // 由子组件 ProjectGrid 的实际请求结果回传网络状态，而不是定时轮询 /health
-function onBackendOnline(v){ backendOnline.value = !!v }
+function onBackendOnline(v) { backendOnline.value = !!v }
 
 function openAIFor(project) {
 	linkedProject.value = project
+	aiOpen.value = true
+}
+
+function openAINew() {
+	linkedProject.value = null
 	aiOpen.value = true
 }
 
@@ -23,16 +28,16 @@ function closeAI() {
 	linkedProject.value = null
 }
 
-function onThemeChange(color){
-  // 可在此同步到应用状态或持久化
-  console.debug('Theme color changed to', color)
+function onThemeChange(color) {
+	// 可在此同步到应用状态或持久化
+	console.debug('Theme color changed to', color)
 }
 
 // 登录功能已移除
 </script>
 
 <template>
-	<div id="app" class="min-h-screen" >
+	<div id="app" class="min-h-screen">
 		<div class="flex">
 			<Sidebar :project="linkedProject" @theme-change="onThemeChange" />
 
@@ -42,7 +47,8 @@ function onThemeChange(color){
 					<p class="text-sm text-gray-600 mt-1">项目列表 — 将鼠标悬停以查看详情，右键打开操作菜单</p>
 				</header>
 
-				<ProjectGrid :backend-online="backendOnline" @link-ai="openAIFor" @backend-online="onBackendOnline" />
+				<ProjectGrid :backend-online="backendOnline" @link-ai="openAIFor" @start-ai="openAINew"
+					@backend-online="onBackendOnline" />
 			</div>
 
 			<AIChatPanel v-if="aiOpen" :project="linkedProject" @close="closeAI" />
@@ -52,6 +58,12 @@ function onThemeChange(color){
 
 <style scoped>
 /* 基本布局调整与主题背景/前景 */
-.min-h-screen { min-height: 100vh }
-#app{ background: var(--bg); color: var(--fg) }
+.min-h-screen {
+	min-height: 100vh
+}
+
+#app {
+	background: var(--bg);
+	color: var(--fg)
+}
 </style>

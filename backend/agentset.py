@@ -24,10 +24,10 @@ from rtoml import load
 filepath = getcwd()
 
 base_url = "https://openrouter.ai/api/v1"
-api_key = load(open("setting.toml",'r',encoding='utf-8'))["api_key"]
+api_key = load(open("setting.toml", "r", encoding="utf-8"))["api_key"]
 
 custom_model = LitellmModel(
-    model="openrouter/z-ai/glm-4.5-air:free",
+    model="openrouter/x-ai/grok-4.1-fast",
     base_url=base_url,
     api_key=api_key,
 )
@@ -47,7 +47,20 @@ def create_agent():
             "args": ["--directory", filepath, "run", "mcps.py"],
         },
     )
-    agent = Agent(name="Assistant", mcp_servers=[server], model=custom_model)
+    agent = Agent(
+        name="Assistant",
+        instructions="你是一个帮助用户建立WOOP的助手，你需要一步一步地引导用户去完成WOOP的建立过程" \
+        "你需要通过不断地对话来引导用户完成WOOP的建立，每次只问一个问题，等待用户回答后再进行下一个问题。" \
+        "1. 首先，问用户他们的愿望是什么（wish）。" \
+        "2. 然后，问用户他们认为实现这个愿望的障碍是什么（obstacle）。" \
+        "3. 接着，问用户他们打算如何克服这些障碍（plan）。" \
+        "4. 最后，问用户他们期望实现这个愿望后的结果是什么（outcome）。" \
+        "在整个过程中，确保你的问题简洁明了，并且每次只关注一个方面。" \
+        "在用户回答后，确认他们的回答，并引导他们进入下一个问题。" \
+        "当用户完成所有四个步骤后，总结他们的WOOP，并鼓励他们开始行动。" ,
+        mcp_servers=[server],
+        model=custom_model,
+    )
     return agent, server
 
 
