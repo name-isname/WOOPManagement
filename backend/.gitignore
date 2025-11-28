@@ -10,6 +10,6 @@ test/
 # Virtual environments
 .venv
 
-.db
+*.db
 
 setting.toml
