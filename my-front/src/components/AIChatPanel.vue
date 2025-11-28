@@ -14,7 +14,21 @@
         <div class="avatar" aria-hidden="true">{{ m.role === 'user' ? '🧑' : (m.role === 'system' ? '⚙️' : '🤖') }}</div>
         <div class="bubble" :class="m.role">
           <template v-for="(seg, si) in parseSegments(m.text)" :key="si">
-            <pre v-if="seg.type==='code'" class="code"><code>{{ seg.content }}</code></pre>
+            <div v-if="seg.type==='think'" class="think-block">
+              <details>
+                <summary>思考过程</summary>
+                <div class="think-content">{{ seg.content }}</div>
+              </details>
+            </div>
+            <div v-else-if="seg.type==='action'" class="action-card">
+              <div class="action-title">💡 建议创建项目</div>
+              <div class="action-preview">
+                <div><strong>名称：</strong>{{ seg.data.name }}</div>
+                <div><strong>愿望：</strong>{{ seg.data.wish }}</div>
+              </div>
+              <button class="btn primary sm" @click="confirmCreate(seg.data)">立即创建</button>
+            </div>
+            <pre v-else-if="seg.type==='code'" class="code"><code>{{ seg.content }}</code></pre>
             <div v-else class="text" v-html="renderMarkdown(seg.content)"></div>
           </template>
           <button class="copy" title="复制" @click="copy(m.text)">复制</button>
@@ -38,7 +52,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 const apiBase = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const props = defineProps({ project: Object })
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'project-created'])
 const input = ref('')
 const sending = ref(false)
 const ta = ref(null)
@@ -144,17 +158,80 @@ async function send(){
   }
 }
 
-// 文本分段（代码块与普通文本）
+// 文本分段（代码块、思考过程、Action与普通文本）
 function parseSegments(t){
   const out = []
   if(!t) return out
-  const parts = String(t).split(/```/g)
-  for(let i=0;i<parts.length;i++){
-    const content = parts[i]
-    if(i % 2 === 1){ out.push({ type:'code', content }) }
-    else if(content){ out.push({ type:'text', content }) }
+  
+  // 1. 提取 <think> 块
+  const thinkRegex = /<think>([\s\S]*?)<\/think>/g
+  let lastIndex = 0
+  let match
+  const rawSegments = []
+  
+  while ((match = thinkRegex.exec(t)) !== null) {
+    if (match.index > lastIndex) {
+      rawSegments.push({ type: 'content', content: t.slice(lastIndex, match.index) })
+    }
+    rawSegments.push({ type: 'think', content: match[1] })
+    lastIndex = thinkRegex.lastIndex
+  }
+  if (lastIndex < t.length) {
+    rawSegments.push({ type: 'content', content: t.slice(lastIndex) })
+  }
+
+  // 2. 处理内容中的代码块和 JSON Action
+  for (const seg of rawSegments) {
+    if (seg.type === 'think') {
+      out.push(seg)
+    } else {
+      const parts = seg.content.split(/```/g)
+      for(let i=0; i<parts.length; i++){
+        const content = parts[i]
+        if(i % 2 === 1){ 
+          // 代码块
+          let isAction = false
+          if (content.trim().startsWith('json')) {
+             try {
+               const jsonStr = content.replace(/^json\s*/, '')
+               if (jsonStr.includes('"action": "create_woop"')) {
+                 const data = JSON.parse(jsonStr)
+                 if (data.action === 'create_woop') {
+                   out.push({ type: 'action', data: data.data, raw: content })
+                   isAction = true
+                 }
+               }
+             } catch(e) {}
+          }
+          if (!isAction) out.push({ type:'code', content }) 
+        }
+        else if(content){ 
+          out.push({ type:'text', content }) 
+        }
+      }
+    }
   }
   return out
+}
+
+async function confirmCreate(data){
+  if(!confirm(`确认创建项目“${data.name}”吗？`)) return
+  try {
+    const res = await fetch(`${apiBase}/woops/`, { 
+      method:'POST', 
+      headers:{ 'Content-Type':'application/json' }, 
+      body: JSON.stringify(data) 
+    })
+    if(res.ok){
+      statusMsg.value = '项目创建成功！'
+      emit('project-created')
+      setTimeout(()=> statusMsg.value='', 3000)
+    } else {
+      throw new Error('创建失败')
+    }
+  } catch(e) {
+    alert(e.message)
+  }
 }
 
 function copy(text){
@@ -225,7 +302,7 @@ async function scrollToBottom(){
 </script>
 
 <style scoped>
-  .ai-panel{ background: var(--chat-bg, #fff); color: var(--fg); position: relative; min-width: 280px; max-width: 720px; border-left: 1px solid var(--surface-border); display:flex; flex-direction: column; height: 100vh; overflow: hidden; padding-bottom: 0; box-sizing: border-box; /* avatar edge offset (negative moves toward edge) */ --avatar-edge-offset: -8px }
+  .ai-panel{ background: var(--chat-bg, #fff); color: var(--fg); position: relative; min-width: 280px; max-width: 720px; border-left: 1px solid var(--surface-border); display:flex; flex-direction: column; height: 100%; overflow: hidden; padding-bottom: 0; box-sizing: border-box; /* avatar edge offset (negative moves toward edge) */ --avatar-edge-offset: -8px }
   .resize-handle-left{ position:absolute; left:-3px; top:0; width:6px; height:100%; cursor: ew-resize; user-select:none }
   /* 聊天区：隐藏滚动条但保留滚动功能（跨浏览器） */
   .chat-window{ background: transparent; border: none; color: var(--fg); flex: 1 1 auto; min-height: 0; overflow: auto; padding: 8px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-gutter: stable }
@@ -255,20 +332,37 @@ async function scrollToBottom(){
   .hint{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8); margin-right: auto; align-self: center }
 
   /* 输入区固定在底部 */
-  .composer{ display:flex; flex-direction: column; gap:8px; margin-top: auto }
-  .input{ width:100%; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 8px; padding:8px 10px; resize: none; line-height:1.5 }
+  .composer{ display:flex; flex-direction: column; gap:10px; margin-top: auto; background: var(--surface); padding: 16px; border-top: 1px solid var(--surface-border); }
+  .input{ width:100%; background: #f8fafc; color: var(--fg); border: 1px solid var(--surface-border); border-radius: 12px; padding:12px 14px; resize: none; line-height:1.5; transition: all .2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); }
+  .input:focus { background: #fff; border-color: var(--brand, #3b82f6); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); outline: none; }
   /* 隐藏输入框滚动条但保留滚动（当达到最大高度时用户仍可滚动） */
   .input{ overflow: auto; -ms-overflow-style: none; scrollbar-width: none }
   .input::-webkit-scrollbar{ width: 0; height: 0 }
-  .actions{ display:flex; gap:8px; justify-content:flex-end }
-  .btn{ border:1px solid var(--surface-border); border-radius:8px; padding:6px 12px; cursor:pointer }
-  .btn.ghost{ background: transparent; color: var(--fg) }
-  .btn.primary{ background: var(--brand, #3b82f6); color:#fff; border-color: transparent }
-  .btn:disabled{ opacity:.6; cursor: not-allowed }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; align-items: center; }
+  .btn{ border:1px solid var(--surface-border); border-radius:8px; padding:8px 16px; cursor:pointer; font-weight: 500; transition: all .15s; }
+  .btn.ghost{ background: transparent; color: #64748b; border-color: transparent; }
+  .btn.ghost:hover { background: #f1f5f9; color: #334155; }
+  .btn.primary{ background: var(--brand, #3b82f6); color:#fff; border-color: transparent; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25); }
+  .btn.primary:hover { filter: brightness(1.08); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35); transform: translateY(-1px); }
+  .btn:disabled{ opacity:.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
   /* 关闭按钮：圆角 + 悬停高亮 */
   .close-btn{ width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--surface-border); background: transparent; color: color-mix(in oklab, var(--fg) 80%, #94a3b8); cursor: pointer; transition: background-color .15s ease, border-color .15s ease, transform .08s ease; font-size: 18px; line-height: 1 }
   .close-btn:hover{ background: color-mix(in oklab, var(--surface) 88%, #00000018); border-color: color-mix(in oklab, var(--surface-border) 80%, #00000033) }
   .close-btn:active{ transform: scale(.96) }
   .close-btn:focus-visible{ outline: 2px solid var(--brand, #3b82f6); outline-offset: 2px }
   
+  /* 思考过程样式 */
+  .think-block { margin: 8px 0; font-size: 0.85em; color: #64748b; background: #f8fafc; border-radius: 8px; padding: 8px 12px; border: 1px solid #e2e8f0; }
+  .think-block summary { cursor: pointer; user-select: none; font-weight: 600; opacity: 0.8; display: flex; align-items: center; gap: 6px; color: #475569; }
+  .think-block summary:hover { opacity: 1; color: #3b82f6; }
+  .think-block summary::before { content: '💭'; font-size: 1.1em; }
+  .think-content { margin-top: 8px; white-space: pre-wrap; line-height: 1.6; color: #475569; padding-left: 4px; border-left: 2px solid #cbd5e1; margin-left: 4px; }
+
+  /* Action Card 样式 */
+  .action-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 12px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all .2s; position: relative; overflow: hidden; }
+  .action-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background: linear-gradient(to bottom, #3b82f6, #8b5cf6); }
+  .action-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+  .action-title { font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05em; }
+  .action-preview { font-size: 0.95em; color: #475569; margin-bottom: 16px; display: grid; gap: 8px; background: #f8fafc; padding: 12px; border-radius: 8px; }
+  .btn.sm { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 6px; }
 </style>

@@ -157,7 +157,23 @@ async def ai_chat(req: ChatRequest, db: Session = Depends(get_db)) -> ChatRespon
             messages=[
                 {
                     "role": "system",
-                    "content": "请用清晰的段落回答，适当换行；如需列点，优先使用短横线或数字序号；避免输出 Markdown 标题标记(如 ###) 和过长段落。",
+                    "content": """你是一个智能助手。
+1. 思考过程：在回答前，你可以使用 <think>...</think> 标签包裹你的思考过程。
+2. 项目管理：如果用户请求创建项目（WOOP），请输出如下 JSON 格式的代码块（不要放在 <think> 中）：
+```json
+{
+  "action": "create_woop",
+  "data": {
+    "name": "项目名称",
+    "wish": "愿望",
+    "obstacle": "障碍",
+    "plan": "计划",
+    "outcome": "结果",
+    "description": "描述"
+  }
+}
+```
+3. 格式要求：请用清晰的段落回答，避免输出 Markdown 标题标记(如 ###)。""",
                 },
                 {"role": "user", "content": prompt},
             ],

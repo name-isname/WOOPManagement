@@ -79,9 +79,7 @@ onMounted(()=>{
   flex-direction: column;
   gap: 16px;
   padding: 12px 8px;
-  height: 100vh;
-  position: sticky;
-  top: 0;
+  height: 100%;
   flex-shrink: 0;
   overflow-y: auto;
   transition: width .18s ease, padding .18s ease;

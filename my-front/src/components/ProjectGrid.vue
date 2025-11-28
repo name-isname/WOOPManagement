@@ -1,10 +1,17 @@
 <template>
   <section>
-    <div class="mb-4 flex justify-between items-center">
-      <div class="text-sm text-gray-600">共 {{ total }} 项</div>
-      <div class="flex gap-2">
-        <button class="bg-green-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" @click="showModal = true" :disabled="!backendOnline">创建新项目</button>
-        <button class="bg-blue-600 text-white px-3 py-1 rounded" @click="fetchList">刷新</button>
+    <div class="mb-6 flex justify-between items-center">
+      <div class="text-sm font-medium text-slate-500">共 {{ total }} 个项目</div>
+      <div class="flex gap-3">
+        <button class="btn-action primary" @click="showModal = true" :disabled="!backendOnline">
+          <span class="icon">+</span> 创建项目
+        </button>
+        <button class="btn-action magic" @click="$emit('link-ai', null)">
+          <span class="icon">✨</span> AI 助手
+        </button>
+        <button class="btn-action outline" @click="fetchList" title="刷新列表">
+          <span class="icon">↻</span>
+        </button>
       </div>
     </div>
 
@@ -357,6 +364,8 @@ async function persistRanks(){
     try{ await Promise.allSettled(updates) }catch{}
   }
 }
+
+defineExpose({ fetchList })
 </script>
 
 <style scoped>
@@ -373,30 +382,42 @@ async function persistRanks(){
 .modal-body{ padding:6px 0 10px }
 .modal-body .text{ color: var(--fg); font-size:14px }
 .modal-actions{ display:flex; justify-content:flex-end; gap:10px; padding-top:8px; border-top: 1px dashed color-mix(in oklab, var(--surface-border) 60%, #00000008); margin-top:8px }
-.btn.ghost{ background: transparent; color: var(--fg); border:1px solid var(--surface-border); border-radius:8px; padding:8px 12px }
-.btn.danger, .btn.danger:disabled{ background: linear-gradient(180deg,#ef4444,#dc2626); color:#fff; border:none; border-radius:8px; padding:8px 12px }
+.btn.ghost{ background: transparent; color: var(--fg); border:1px solid var(--surface-border); border-radius:8px; padding: 8px 12px }
+.btn.danger, .btn.danger:disabled{ background: linear-gradient(180deg,#ef4444,#dc2626); color:#fff; border:none; border-radius:8px; padding: 8px 12px }
 .btn.danger:hover{ filter: brightness(.95) }
 .btn:disabled{ opacity:.6; cursor:not-allowed }
-.modal-input{ background: transparent; color: var(--fg); border-color: var(--surface-border) }
-.context-menu{ background: var(--surface); border: 1px solid var(--surface-border) }
-/* 使用响应式 Grid，由最高卡片决定该行高度，其下各行整体下移 */
-/* 骨架屏 */
-.skeleton{ height: 92px; border-radius: 12px; border:1px solid var(--color-gray-200); background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite }
-@keyframes shimmer{ 0%{ background-position: 100% 0 } 100%{ background-position: -100% 0 } }
-/* 空状态 */
-.empty{ background:#fff; border:1px dashed var(--color-gray-400); border-radius:12px; padding:28px; text-align:center }
-.empty-title{ font-weight:700; font-size:18px; color:#0f172a }
-.empty-desc{ color:#475569; font-size:13px; margin-top:6px; margin-bottom:12px }
-.btn{ background: var(--brand, #3b82f6); color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer }
-.btn:hover{ filter: brightness(1.05) }
-/* 拖拽放置时的轻微提示边框 */
-.dnd-item{ border-radius: 12px }
-.dnd-item:where([draggable="true"]){ cursor: grab }
-.dnd-item:where([draggable="true"]:active){ cursor: grabbing }
+.msg-err{ color:#ef4444; font-size: 12px; padding: 6px 16px }
 
-.modal-card{ background: var(--surface); border: 1px solid var(--surface-border) }
-.backdrop{ position: fixed; inset:0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px) }
-.edit-panel{ position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 560px; max-width: 92vw; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.2); display:flex; flex-direction: column; max-height: 90vh; min-height: 40vh; overflow: hidden }
+/* 新增按钮样式 */
+.btn-action {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all .2s ease; border: 1px solid transparent;
+}
+.btn-action:active { transform: scale(0.98); }
+.btn-action .icon { font-family: sans-serif; line-height: 1; font-size: 1.1em; }
+
+.btn-action.primary {
+  background: var(--brand, #3b82f6); color: #fff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+.btn-action.primary:hover { filter: brightness(1.08); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3); }
+.btn-action.primary:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
+
+.btn-action.magic {
+  background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.25);
+}
+.btn-action.magic:hover { filter: brightness(1.1); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.35); }
+
+.btn-action.outline {
+  background: transparent; border-color: var(--surface-border); color: var(--fg);
+  padding: 8px 12px;
+}
+.btn-action.outline:hover { background: var(--surface-border); }
+
+/* 修复丢失的编辑弹窗样式 */
+.edit-panel{ position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 560px; max-width: 92vw; background: var(--surface); color: var(--fg); border: 1px solid var(--surface-border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.2); display:flex; flex-direction: column; max-height: 90vh; min-height: 40vh; overflow: hidden; z-index: 100; }
 .edit-header{ display:flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--surface-border) }
 .edit-title{ font-size: 16px; font-weight: 700 }
 .edit-sub{ font-size: 12px; color: color-mix(in oklab, var(--fg) 60%, #94a3b8) }
@@ -410,8 +431,4 @@ async function persistRanks(){
 .input[type="textarea"], textarea.input{ min-height: 120px }
 .input:focus{ outline: none; border-color: color-mix(in oklab, var(--brand) 60%, var(--surface-border)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 18%, transparent) }
 .edit-footer{ display:flex; align-items:center; gap:8px; padding: 12px 16px; border-top: 1px solid var(--surface-border); background: var(--surface); margin-top: auto }
-.btn.ghost{ background: transparent; color: var(--fg); border:1px solid var(--surface-border); border-radius:8px; padding: 6px 12px; cursor: pointer }
-.btn.primary{ background: var(--brand, #3b82f6); color:#fff; border:none; border-radius:8px; padding: 6px 12px; cursor: pointer }
-.btn:disabled{ opacity:.6; cursor:not-allowed }
-.msg-err{ color:#ef4444; font-size: 12px; padding: 6px 16px }
 </style>
